@@ -1,0 +1,177 @@
+body{
+    background-color: #161616;
+    color: #DDDDDD;
+}
+
+#ui-wrapper{
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+}
+
+#story-div {
+    font-size: 5vh;
+    padding: 5vh;
+    overflow: auto;
+    height:85%;
+    scrollbar-color: #161616 gray;
+    scrollbar-width: thin;
+}
+
+span {
+    display: inline; 
+}
+
+#controls{
+    display:block;
+    text-align: center;
+    color: #BBBBFF;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    background-color: #161616 ;
+
+  }
+  #loadFileInput{
+    display: none;
+  }
+
+#context-stats{
+    position: fixed;
+    top: 0;
+    right: 0;
+    border-radius: 1000px;
+    margin: 10px;
+    padding:  0.5em 1em;
+    background-color: #222222;
+}
+
+#upgrading-context{
+  color: transparent;  
+  text-shadow: 0 0 0 green;
+}
+
+.invisible{
+  visibility: hidden;
+  display: inline-block;
+  width: 0;
+}
+
+.author-user{
+    color: #BBBBFF;
+}
+
+
+.control-icon {
+  font-size: 5vh !important;
+}
+
+.control-icon.disabled {
+    color: #444444;
+    pointer-events: none;
+}
+
+#new-text-icon{
+  position:fixed;
+  color: #BBBBFF;
+  font-weight: bolder;
+  right: 5vh;
+  bottom: 10vh;
+  background-color: #222222;
+  border-radius:1000px;
+  padding: 10px
+  
+}
+#new-text-iconn:hover {
+  cursor: pointer;
+}
+
+.story-span.disabled{
+    pointer-events: none;
+}
+
+.control-icon:hover {
+    cursor: pointer;
+}
+
+/*icons*/
+.material-symbols-rounded {
+    font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24
+}
+
+
+/* settings popup*/
+/* CSS for the modal */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+  }
+  
+  .modal-content {
+    background-color: #161616;
+    margin: 10% auto; 
+    padding: 20px;
+    width: 50%;
+    border-radius: 3em;
+    padding: 3em;
+    font-size: 1.5em
+  }
+  
+  .close {
+    color: #DDDDDD;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  
+  .close:hover,
+  .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  .settings-text-field{
+    width: 4em;
+    text-align:center;
+    background-color: transparent;
+    color: #BBBBFF;
+    border-radius: 0.4em;
+    border: 2px solid #BBBBFF;
+    padding: 0.5em;
+    margin-right: 1em;
+    margin-top:0.4em;
+  }
+
+  .settings-title{
+    color: #BBBBFF;
+  }
+  #apply-settings{
+    border-radius: 0.4em;
+    color: #BBBBFF;
+    border: 2px solid #BBBBFF;
+    background-color: transparent;
+    font-size: 1em;
+    padding: 0.3em 1em;
+  }
+  #apply-settings:hover{
+    border-radius: 0.4em;
+    color: #161616;
+    border: 2px solid #BBBBFF;
+    background-color: #BBBBFF;
+    font-size: 1em;
+    padding: 0.3em 1em;
+    cursor: pointer;
+  }
+

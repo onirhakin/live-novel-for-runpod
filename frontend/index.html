@@ -1,0 +1,800 @@
+<html>
+<header>
+    <title>Live Novel</title>
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <!-- To prevent the page to be loaded from cache -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+</header>
+
+<body>
+    <div id="ui-wrapper">
+        <!-- The modal settings popup -->
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeSettingsPopup()">&times;</span>
+                <!-- Settings content goes here -->
+                <h2 class="settings-title">Advanced Settings</h2>
+                <input type="text" id="top_k" class="settings-text-field" value="40">
+                <label for="top_k">top_k</label>
+                <br>
+                <input type="text" id="top_p" class="settings-text-field" value="0.95">
+                <label for="top_p">top_p</label>
+                <br>
+                <input type="text" id="temperature" class="settings-text-field" value="0.8">
+                <label for="temperature">temperature</label>
+                <br>
+                <input type="text" id="repetition_penalty" class="settings-text-field" value="1.1">
+                <label for="repetition_penalty">repetition_penalty</label>
+                <br>
+                <input type="text" id="last_n_tokens" class="settings-text-field" value="64">
+                <label for="last_n_tokens">last_n_tokens</label>
+                <br>
+                <input type="text" id="seed" class="settings-text-field" value="-1">
+                <label for="seed">seed</label>
+                <br>
+                <input type="text" id="max_new_tokens" class="settings-text-field" value="100">
+                <label for="max_new_tokens">max_new_tokens_k</label>
+                <br>
+                <input type="text" id="gpu_layers" class="settings-text-field" value="30">
+                <label for="gpu_layers">gpu_layers</label>
+                <br>
+                <input type="text" id="context_length_step" class="settings-text-field" value="1000">
+                <label for="context_length_step">Context length step</label>
+                <br>
+                <br>
+                <a href="https://github.com/marella/ctransformers?tab=readme-ov-file#documentation:~:text=not%20fully%20supported.-,Documentation,0,-Note%3A%20Currently">More about these values</a>
+                <br>
+                <div style="text-align: right">
+                    <button id="apply-settings" onclick="applySettings()">
+                        Apply
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+        <div id="context-stats">
+            <span id="context-ratio">?/?</span>
+            <span id="upgrading-context" class="invisible">🔺</span>
+            <span id="downgrading-context" class="invisible">🔻</span>
+        </div>
+        <div id="story-div" onscroll="toggleNewTextIcon()">
+        </div>
+        <span id="new-text-icon" class="material-symbols-rounded" title="Go to most recent" onclick="goToLastSpan()" >south</span>
+        <div id="controls">
+            <span class="material-symbols-rounded control-icon enabled" title="Settings" onclick="openSettingsPopup()">settings</span>
+            <span class="material-symbols-rounded control-icon enabled" title="Save and download the story" onclick="saveStoryFile()">save</span>
+            <label for="loadFileInput"> 
+                <span class="material-symbols-rounded control-icon enabled" title="Upload prompt or story from file" onfocus="this.value=''">upload_file</span>
+            </label>
+            <input id="loadFileInput" type="file">
+            <span class="material-symbols-rounded control-icon enabled" title="Reload full story" onclick="loadFullStory()">refresh</span>
+            <span class="material-symbols-rounded control-icon enabled" title="Clear story" onclick="clearStory()">delete_forever</span>
+            <span class="material-symbols-rounded control-icon enabled" title="Fill last span with '...', to make it visible." onclick="fillLastSpan()">
+                text_fields_alt
+                </span>
+            <span class="material-symbols-rounded control-icon enabled" title="Go to now" onclick="goToLastSpan()">south</span>
+            <span id="streamSubmitUserText" class="material-symbols-rounded control-icon enabled" title="Submit User Text" onclick="streamSubmitUserText()">send</span>
+        </div>
+    </div>
+</body>
+<script>
+    var xhr = null;
+
+    // defines functions that checks if the xhr object exist otherwise creates it
+    getXmlHttpRequestObject = function () {
+        if (!xhr) {
+            // Create a new XMLHttpRequest object 
+            xhr = new XMLHttpRequest();
+        }
+        return xhr;
+    };
+
+    function dataCallback() {
+        // Check response is positive (200) and ready (4) or not
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log("User data received!");
+            getDate();
+            dataDiv = document.getElementById('result-container');
+            // Set current data text
+            dataDiv.innerHTML = xhr.responseText;
+        }
+    }
+    function getUsers() {
+        console.log("Get users...");
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = dataCallback; // callback gfunction
+        // asynchronous requests
+        xhr.open("GET", "http://localhost:6969/users", true); // last par sets it to async
+        // Send the request over the network
+        xhr.send(null);
+    }
+
+    //callback called when we send the data
+    function sendDataCallback() {
+        // Check response is ready or not
+        //201 201 is usually sent when data was sent and the backend created a new resource or piece of data on the backend side in the database for example
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            console.log("Data creation response received!");
+            getDate();
+            dataDiv = document.getElementById('sent-data-container');
+            // Set current data text
+            dataDiv.innerHTML = xhr.responseText;
+        }
+    }
+
+    // function to send the data
+    function sendData() {
+        dataToSend = document.getElementById('data-input').value;
+        if (!dataToSend) {
+            console.log("Data is empty.");
+            return;
+        }
+        console.log("Sending data: " + dataToSend);
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = sendDataCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/users", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"data": dataToSend}));
+    }
+</script>
+<script>
+    function disableControls(){
+
+        controls =document.querySelectorAll('.control-icon');
+        controls.forEach(control => {
+            console.log('disabling ' + control);
+            // control.classList.replace('control-icon','control-icon-disabled');
+            control.classList.replace('enabled','disabled');
+            control.disabled = true; // Disable the element
+        });
+        spans =document.querySelectorAll('.story-span');
+        spans.forEach(span => {
+            console.log('disabling ' + span);
+            // control.classList.replace('control-icon','control-icon-disabled');
+            span.classList.replace('enabled','disabled');
+            span.disabled = true; // Disable the element
+        });
+
+    }
+    function enableControls(){
+        controls =document.querySelectorAll('.control-icon');
+        controls.forEach(control => {
+            control.classList.replace('disabled','enabled');
+            control.disabled = true; // Disable the element
+        });
+        spans =document.querySelectorAll('.story-span');
+        spans.forEach(span => {
+            span.classList.replace('disabled','enabled');
+            span.disabled = true; // Disable the element
+        });
+    }
+    
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        loadFullStory();
+    });
+
+    function loadFullStory(){
+        // disable controlls
+        disableControls();
+
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = loadFullStoryCallback;
+        // asynchronous requests
+        xhr.open("GET", "http://localhost:6969/getFullStory", true);
+        // Send the request over the network
+        xhr.send(null);
+    }
+
+    function loadFullStoryCallback(){
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log(xhr.responseText);
+             // Parse the JSON string
+             const jsonObject = JSON.parse(xhr.responseText);
+
+            distributeSettingsToUi(jsonObject.llm_settings);
+
+            
+            
+            const story = jsonObject.story;
+            console.log(story);
+            displayStory(story);
+            appendEditableSpan();
+            setTimeout(goToLastSpan, 200);
+            // reenable the controls
+            enableControls();
+            // update context size
+            updateContextSize(jsonObject);
+        }
+    }
+
+    function displayStory(story){
+        const storyDiv = document.getElementById('story-div'); 
+        // remove all elements in the story div
+        while (storyDiv.firstChild) {
+            storyDiv.removeChild(storyDiv.firstChild);
+        }
+        // create spans from the story array
+        story.forEach(function(element, index) {
+            // Create a new span element
+            const newSpan = document.createElement('span');;
+            // Set content for the span
+            newSpan.innerText = element.text;
+            newSpan.id = index;
+            switch(element.author){
+                case "User":
+                    newSpan.classList.add("author-user");
+                    break;
+                case "AI":
+                    newSpan.classList.add("author-ai");
+                    break;
+                case "Prompt":
+                    newSpan.classList.add("author-prompt");
+                    break;
+            }
+            newSpan.classList.add("story-span");
+            newSpan.classList.add("enabled");
+            // Append the new span to the div
+            storyDiv.appendChild(newSpan);
+        });
+
+    }
+
+    // scroll the view to the last span
+    function goToLastSpan(){
+        const parentDiv = document.getElementById('story-div');
+        const spans = parentDiv.getElementsByTagName('span');
+        if(spans.length !== 0){
+            const lastSpan = spans[spans.length - 1];
+            lastSpan.scrollIntoView();
+        }
+    }
+    function fillLastSpan(){
+        const parentDiv = document.getElementById('story-div');
+        const spans = parentDiv.getElementsByTagName('span');
+        if(spans.length !== 0){
+            const lastSpan = spans[spans.length - 1];
+            if(lastSpan.innerText == "")
+                lastSpan.innerText = "..."
+        }
+    }
+    function appendEditableSpan(){
+        // Select the div that contains the list of spans
+        const parentDiv = document.getElementById('story-div');
+        
+        // Create a new span element
+        const newSpan = document.createElement('span');
+        // assing id
+        newSpan.id = getNextAvailableSpanId(parentDiv); 
+        newSpan.contentEditable = true;
+        newSpan.classList.add("author-user");
+        newSpan.classList.add("story-span");
+        newSpan.classList.add("enabled");
+        // Append the new span to the div
+        parentDiv.appendChild(newSpan);
+    }
+
+    function getNextAvailableSpanId(parentDiv){
+        const spans = parentDiv.getElementsByTagName('span');
+        var newSpanId = 0;
+        if(spans.length !== 0){
+            const lastSpan = spans[spans.length - 1];
+            newSpanId = parseInt(lastSpan.id)+1;
+        }
+        return newSpanId;
+    }
+
+    function getTokensStats(){
+        // disable controlls
+        disableControls();
+
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = getTokensStatsCallback;
+        // asynchronous requests
+        xhr.open("GET", "http://localhost:6969/getTokensStats", true);
+        // Send the request over the network
+        xhr.send(null);
+    }
+
+    function getTokensStatsCallback(){
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log(xhr.responseText);
+             // Parse the JSON string
+            const jsonObject = JSON.parse(xhr.responseText);
+            // reenable the controls
+            enableControls();
+            // update context size
+            updateContextSize(jsonObject);
+        }
+    }
+
+    function updateContextSize(jsonObject){
+        // update context size
+        const story_length = jsonObject.story_length;
+        const context_length = jsonObject.context_length;
+        const context_length_step = jsonObject.context_length_step;
+        const max_new_tokens = jsonObject.max_new_tokens;
+        // check if is neded to change the context of the model
+        const estimatedNextStoryLength = story_length + 3 * max_new_tokens
+        if(  estimatedNextStoryLength > context_length){
+            // if the current story plus 3 times the max new generated tokensnext iteration,
+            // is more than the current context (expected length after generation), 
+            // must request an upgrade  
+            changeContextSize(Math.ceil(estimatedNextStoryLength/context_length_step)*context_length_step, context_length, context_length_step);
+        }else if( context_length - context_length_step > estimatedNextStoryLength ){
+            // if the current context minus the increase in context during upgrade is bigger 
+            // than the story plus 3 times the new tokens (expected length after generation)
+            // shall request a downgrade
+            changeContextSize(Math.ceil(estimatedNextStoryLength/context_length_step)*context_length_step, context_length, context_length_step);
+        }
+        const contextStatsSpan = document.getElementById('context-ratio');
+        contextStatsSpan.innerText = story_length + "/" + context_length
+    }
+
+    function changeContextSize(newContextSize, currentContextSize, step){
+        // make sure context doesn't become 0
+        if(newContextSize == 0)
+            newContextSize = step;
+        if(newContextSize > currentContextSize){
+            const up = document.getElementById('upgrading-context');
+            up.classList.remove('invisible'); // Remove the old class
+            up.classList.add('visible');
+        }else if(newContextSize < currentContextSize){
+            const down = document.getElementById('downgrading-context');
+            down.classList.remove('invisible'); // Remove the old class
+            down.classList.add('visible');
+        }else
+            return;
+        
+        // disable controls
+        disableControls();
+
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = changeContextSizeCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/changeContextSize", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"new_context_size": newContextSize}));
+    }
+
+    function changeContextSizeCallback(){
+        // Check response is ready or not
+        //201 201 is usually sent when data was sent and the backend created a new resource or piece of data on the backend side in the database for example
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            // Parse the JSON string
+            const jsonObject = JSON.parse(xhr.responseText);
+
+            // update context size
+            updateContextSize(jsonObject);
+        }
+        if (xhr.readyState == 4) {
+            const up = document.getElementById('upgrading-context');
+            up.classList.remove('visible'); // Remove the old class
+            up.classList.add('invisible');
+            const down = document.getElementById('downgrading-context');
+            down.classList.remove('visible'); // Remove the old class
+            down.classList.add('invisible');
+            // reenable the controls
+            enableControls();
+        }
+    }
+
+
+    // function to send the text added by the user
+    /*function submitUserText() {
+        // gets the last span in the story div
+        const div = document.getElementById('story-div'); 
+        const spans = div.getElementsByTagName('span');
+        const lastSpan = spans[spans.length - 1];
+        if(!lastSpan.contentEditable){
+            console.log("Error the last span is not editable, something is wrong.");
+            return;
+        }
+        //make span uneditable
+        lastSpan.contentEditable = false;
+        dataToSend = lastSpan.innerText;
+        console.log("Sending data: " + dataToSend);
+        // disable controlls
+        disableControls();
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = submitUserTextCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/submitUserText", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"data": dataToSend}));
+    }*/
+
+    function removeLastReturn(str){
+        let lastNewlineIndex = str.lastIndexOf('\n');
+
+        if (lastNewlineIndex !== -1) {
+            str = str.substring(0, lastNewlineIndex) + "" + str.substring(lastNewlineIndex + 1);
+        }
+        str = str.replace("\xa0", ' ')
+        return str;
+    }
+
+    function streamSubmitUserText(){
+        // gets the last span in the story div
+        const parentDiv = document.getElementById('story-div'); 
+        const spans = parentDiv.getElementsByTagName('span');
+        const lastSpan = spans[spans.length - 1];
+        if(!lastSpan.contentEditable){
+            console.log("Error the last span is not editable, something is wrong.");
+            return;
+        }
+        //make span uneditable
+        lastSpan.contentEditable = false;
+        dataToSend = removeLastReturn(lastSpan.innerText);
+        console.log("Sending data: " + dataToSend);
+        // disable controlls
+        disableControls();
+        // Create a new span element where to
+        const newSpan = document.createElement('span');
+        // Set content for the new span if needed
+        newSpan.id = getNextAvailableSpanId(parentDiv);
+        newSpan.classList.add("story-span");
+        newSpan.classList.add("disabled");
+        parentDiv.appendChild(newSpan);
+        // Handle the state change event
+        
+        xhr = getXmlHttpRequestObject();
+        //xhr.onreadystatechange = submitUserTextCallback;
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.LOADING) {
+                // Update the span content as data is being received
+                newSpan.innerText = xhr.response;
+                toggleNewTextIcon(); //to show icon if new text arrived
+                console.log('streaming');
+            }
+                   // Check response is ready or not
+            // finished streaming
+            if (xhr.readyState == 4) {
+                appendEditableSpan();
+                // reenable the controls
+                enableControls();
+                // update the token stats
+                getTokensStats()
+            }
+        };
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/streamSubmitUserText", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"data": dataToSend}));
+        // Create a new EventSource for the streaming URL
+        const eventSource = new EventSource('http://localhost:6969/streamSubmitUserText');
+
+        // Handle the 'message' event to update the span content
+        // eventSource.onmessage = function(event) {
+        //     const span = document.getElementById('stream');
+        //     span.textContent += event.data; // Append the received data to the span content
+        //     console.log('stremmmdmemd');
+        // };
+    }
+    // callback when the response is received
+    /*function submitUserTextCallback(){
+        // Check response is ready or not
+        //201 201 is usually sent when data was sent and the backend created a new resource or piece of data on the backend side in the database for example
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            console.log("Data creation response received!");
+
+            // Select the div that contains the list of spans
+            const parentDiv = document.getElementById('story-div');
+            // Create a new span element
+            const newSpan = document.createElement('span');
+            //parse message 
+            console.log(xhr.responseText);
+            // Parse the JSON string
+            const jsonObject = JSON.parse(xhr.responseText);
+            // Extract the value of the "message" key
+            const generatedResponse = jsonObject.generatedResponse;
+            // Set content for the new span if needed
+            newSpan.innerText = generatedResponse;
+            newSpan.id = getNextAvailableSpanId(parentDiv);
+            newSpan.classList.add("story-span");
+            newSpan.classList.add("enabled");
+            // Append the new span to the div
+            parentDiv.appendChild(newSpan);
+            
+            appendEditableSpan();
+
+            // update context size
+            updateContextSize(jsonObject);
+            // reenable the controls
+            enableControls();
+        }
+    }*/
+
+    // submit text if clicked shif enter
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.shiftKey) {
+            // prevent to cvarriage return
+            e.preventDefault();
+            // Get the span element
+            const spanButton = document.getElementById('streamSubmitUserText');
+
+            // Check if the span has the class 'enabled', otherwise prevent the function to trigger (controls are disabled)
+            if (spanButton.classList.contains('enabled')) {
+                streamSubmitUserText();
+            }
+        }
+    });
+
+    
+    // function to send the text added by the user
+    function submitEdit(span) {
+        // disable controlls
+        disableControls();
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = submitEditCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/submitEdit", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"id": parseInt(span.id), "text": span.innerText}));
+    }
+
+    function submitEditCallback(){
+        // Check response is ready or not
+        //201 201 is usually sent when data was sent and the backend created a new resource or piece of data on the backend side in the database for example
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            // Parse the JSON string
+            const jsonObject = JSON.parse(xhr.responseText);
+
+            // reenable the controls
+            enableControls();
+            // update context size
+            updateContextSize(jsonObject);
+            
+        }
+    }
+
+    function makeOldSpanEditable(span){
+        span.contentEditable = true;
+        span.focus();
+        console.log('Span made editable: '+span.id);
+        span.addEventListener('focusout', function(event) {
+            span.contentEditable = false;
+            submitEdit(span);
+            console.log('Span made uneditable: '+span.id);
+            // here is should submit to server
+        });
+    }
+    // listener for any element of story-div double cliked
+    document.getElementById('story-div').addEventListener('dblclick', function(event) {
+        if (event.target.matches('span')) {
+            const clickedSpan = event.target;
+            console.log('Span clicked: '+clickedSpan.id);
+            if(clickedSpan.contentEditable == true)
+                return;
+            makeOldSpanEditable(clickedSpan);
+
+        }
+    });
+    // listener for any element of story-div where a key is added
+    document.getElementById('story-div').addEventListener('input', function(event) {
+        if (event.target.matches('span')) {
+            const span = event.target;
+            span.scrollIntoView(false);
+        }
+    });
+</script>
+
+<script>
+    const loadFileInput = document.getElementById('loadFileInput')
+    // clear the input element so if the same file is loaded it triggers the onchange anywhay
+    loadFileInput.onclick = e => {
+        e.target.value = '';
+    } 
+    loadFileInput.onchange = e => { 
+        if(e.target.files.length === 0)
+            return;
+        // getting a hold of the file reference
+        var file = e.target.files[0]; 
+
+        // setting up the reader
+        var reader = new FileReader();
+        reader.readAsText(file,'UTF-8');
+
+        // here we tell the reader what to do when it's done reading...
+        reader.onload = readerEvent => {
+            var content = readerEvent.target.result; // this is the content!
+            console.log( content );
+            content = verifyTitle(content, file.name);
+            loadStoryFile(content);
+        }
+    }
+
+    function verifyTitle(jsonContent, filename){
+        jsonObject = JSON.parse(jsonContent);
+        if(jsonObject.title != '')
+            return jsonContent;
+        jsonObject.title = filename.lastIndexOf('.') !== -1 ? filename.substring(0, filename.lastIndexOf('.')) : filename;
+        return JSON.stringify(jsonObject, null, 4);
+    }
+
+    function loadStoryFile(jsonContent){
+        // disable controlls
+        disableControls();
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = loadStoryFileCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/setStoryFile", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(jsonContent);
+    }
+
+    function loadStoryFileCallback(){
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            // reenable the controls
+            enableControls();
+            // once the story has been loaded in the backend triggers the frontend to retrieve it and diplay it
+            loadFullStory();
+        }
+    }
+
+    // dowloads the json file, converts the variable to string if it is not already
+    function download(content, fileName, contentType) {
+        if(fileName =='')
+            fileName = "LiveNovelSave"
+        fileName += ".lns"
+        if (typeof variable !== 'string') 
+            content = JSON.stringify(content, null, 4);
+        var a = document.createElement("a");
+        var file = new Blob([content], {type: contentType});
+        a.href = URL.createObjectURL(file);
+        a.download = fileName;
+        a.click();
+    }
+    jsonData= {'hi': 'lady', 'by': 'man'
+    }
+    //download(jsonData, 'json.txt', 'text/plain');
+
+    function saveStoryFile(){
+        // disable controlls
+        disableControls();
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = saveStoryFileCallback;
+        // asynchronous requests
+        xhr.open("GET", "http://localhost:6969/getStoryFile", true);
+        // Send the request over the network
+        xhr.send(null);
+    }
+
+    function saveStoryFileCallback(){
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            console.log("saveStoryFileCallback: " + xhr.responseText);
+            const jsonObject = JSON.parse(xhr.responseText);
+            
+            download(jsonObject, jsonObject.title, 'text/plain');
+/*-
+             // Parse the JSON string
+             const jsonObject = JSON.parse(xhr.responseText);
+
+
+            // update context size
+            updateContextSize(jsonObject);
+            
+            const story = jsonObject.story;*/
+            // reenable the controls
+            enableControls();
+        }
+    }
+
+    // clear the story
+    function clearStory(){
+        if (confirm("This will completely erase the story. Do you want to proceed?")) {
+            // disable controlls
+            disableControls();
+            xhr = getXmlHttpRequestObject();
+            xhr.onreadystatechange = clearStoryCallback;
+            // asynchronous requests
+            xhr.open("GET", "http://localhost:6969/clearStory", true);
+            // Send the request over the network
+            xhr.send(null);
+        } else {
+            // Code to execute if the user clicks "Cancel"
+        }
+        
+    }
+
+    function clearStoryCallback(){
+        if (xhr.readyState == 4 && xhr.status == 201) {
+            // reenable the controls
+            enableControls();
+            // once the story has been cleared in the backend triggers the frontend to retrieve it and diplay it
+            loadFullStory();
+        }
+    }
+</script>
+<script>
+    // Open the settings popup
+    function openSettingsPopup() {
+        document.getElementById('settingsModal').style.display = 'block';
+    }
+
+    // Close the settings popup
+    function closeSettingsPopup() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    // apply settings 
+    function applySettings(){
+        closeSettingsPopup();
+        let settings = {
+            "top_k": parseInt(document.getElementById('top_k').value),
+            "top_p": parseFloat(document.getElementById('top_p').value),
+            "temperature": parseFloat(document.getElementById('temperature').value),
+            "repetition_penalty": parseFloat(document.getElementById('repetition_penalty').value),
+            "last_n_tokens": parseInt(document.getElementById('last_n_tokens').value),
+            "seed": parseInt(document.getElementById('seed').value),
+            "max_new_tokens": parseInt(document.getElementById('max_new_tokens').value),
+            "gpu_layers": parseInt(document.getElementById('gpu_layers').value),
+            "context_length_step": parseInt(document.getElementById('context_length_step').value)
+        }
+        console.log(settings);
+        setSettings(settings);
+    }
+
+    // function to send the settings
+    function setSettings(settings) {
+        // disable controlls
+        disableControls();
+        xhr = getXmlHttpRequestObject();
+        xhr.onreadystatechange = setSettingsCallback;
+        // asynchronous requests
+        xhr.open("POST", "http://localhost:6969/setSettings", true);
+        xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        // Send the request over the network
+        xhr.send(JSON.stringify({"llm_settings": settings}));
+    }
+    // callback when the response is received
+    function setSettingsCallback(){
+        // Check response is ready or not
+        if (xhr.readyState == 4) {
+            // reenable the controls
+            enableControls();
+        }
+    }
+
+    function distributeSettingsToUi(settings){
+        document.getElementById('top_k').value = settings['top_k'];
+        document.getElementById('top_p').value = settings['top_p'];
+        document.getElementById('temperature').value = settings['temperature'];
+        document.getElementById('repetition_penalty').value = settings['repetition_penalty'];
+        document.getElementById('last_n_tokens').value = settings['last_n_tokens'];
+        document.getElementById('seed').value = settings['seed'];
+        document.getElementById('max_new_tokens').value = settings['max_new_tokens'];
+        document.getElementById('gpu_layers').value = settings['gpu_layers'];
+        document.getElementById('context_length_step').value = settings['context_length_step'];
+    }
+
+
+</script>
+<script>
+    function toggleNewTextIcon() {
+      var storyDiv = document.getElementById('story-div');
+      var newTextIcon = document.getElementById('new-text-icon');
+      
+      if (storyDiv.scrollHeight - storyDiv.scrollTop > storyDiv.clientHeight) {
+        newTextIcon.style.display = 'block'; // Show the icon if not scrolled to the bottom
+      } else {
+        newTextIcon.style.display = 'none'; // Hide the icon if scrolled to the bottom
+      }
+    }
+  </script>
+
+</html>
