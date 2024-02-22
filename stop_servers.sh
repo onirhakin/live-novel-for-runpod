@@ -8,10 +8,10 @@ python_server_pid=$(<python_server_pid.txt)
 
 # Stop the web server
 echo "Stopping the web server..."
-kill $web_server_pid
+kill -9 $web_server_pid
 
 # Stop the database server
 echo "Stopping the python server..."
-kill $python_server_pid
+kill -9 $python_server_pid
 
 echo "Servers stopped."

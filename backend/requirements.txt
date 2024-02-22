@@ -2,3 +2,5 @@ transformers
 ctransformers
 ctransformers[cuda]
 tensorflow
+flask
+flask-cors
