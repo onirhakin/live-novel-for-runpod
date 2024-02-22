@@ -445,4 +445,4 @@ def setSettings():
 
 #default port wuld be 5000 we ovverride it, we shoulduse enviromental variables but we lazy now
 if __name__ == "__main__":
-    app.run("localhost", 6969)
+    app.run(host="0.0.0.0", port=6969) # this host is necessary to run in runpod

@@ -110,7 +110,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = dataCallback; // callback gfunction
         // asynchronous requests
-        xhr.open("GET", "http://localhost:6969/users", true); // last par sets it to async
+        xhr.open("GET", apiUrl + "users", true); // last par sets it to async
         // Send the request over the network
         xhr.send(null);
     }
@@ -139,7 +139,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = sendDataCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/users", true);
+        xhr.open("POST", apiUrl + "users", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"data": dataToSend}));
@@ -179,6 +179,11 @@
     
 </script>
 <script>
+    // on runpod deduces the http port to do therequest
+    const expectedPort = 6969;
+    const currentURL = window.location.href;
+    const apiUrl = currentURL.replace("8000",expectedPort);
+
     document.addEventListener('DOMContentLoaded', (event) => {
         loadFullStory();
     });
@@ -190,7 +195,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = loadFullStoryCallback;
         // asynchronous requests
-        xhr.open("GET", "http://localhost:6969/getFullStory", true);
+        xhr.open("GET", apiUrl + "getFullStory", true);
         // Send the request over the network
         xhr.send(null);
     }
@@ -300,7 +305,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = getTokensStatsCallback;
         // asynchronous requests
-        xhr.open("GET", "http://localhost:6969/getTokensStats", true);
+        xhr.open("GET", apiUrl + "getTokensStats", true);
         // Send the request over the network
         xhr.send(null);
     }
@@ -361,7 +366,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = changeContextSizeCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/changeContextSize", true);
+        xhr.open("POST", apiUrl + "changeContextSize", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"new_context_size": newContextSize}));
@@ -409,7 +414,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = submitUserTextCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/submitUserText", true);
+        xhr.open("POST", apiUrl + "submitUserText", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"data": dataToSend}));
@@ -469,7 +474,7 @@
             }
         };
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/streamSubmitUserText", true);
+        xhr.open("POST", apiUrl + "streamSubmitUserText", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"data": dataToSend}));
@@ -540,7 +545,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = submitEditCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/submitEdit", true);
+        xhr.open("POST", apiUrl + "submitEdit", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"id": parseInt(span.id), "text": span.innerText}));
@@ -631,7 +636,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = loadStoryFileCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/setStoryFile", true);
+        xhr.open("POST", apiUrl + "setStoryFile", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(jsonContent);
@@ -669,7 +674,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = saveStoryFileCallback;
         // asynchronous requests
-        xhr.open("GET", "http://localhost:6969/getStoryFile", true);
+        xhr.open("GET", apiUrl + "getStoryFile", true);
         // Send the request over the network
         xhr.send(null);
     }
@@ -702,7 +707,7 @@
             xhr = getXmlHttpRequestObject();
             xhr.onreadystatechange = clearStoryCallback;
             // asynchronous requests
-            xhr.open("GET", "http://localhost:6969/clearStory", true);
+            xhr.open("GET", apiUrl + "clearStory", true);
             // Send the request over the network
             xhr.send(null);
         } else {
@@ -756,7 +761,7 @@
         xhr = getXmlHttpRequestObject();
         xhr.onreadystatechange = setSettingsCallback;
         // asynchronous requests
-        xhr.open("POST", "http://localhost:6969/setSettings", true);
+        xhr.open("POST", apiUrl + "setSettings", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
         xhr.send(JSON.stringify({"llm_settings": settings}));
