@@ -39,7 +39,7 @@ def reloadModel():
     print("Loading LLM")
     global llm_settings
     
-    llm = AutoModelForCausalLM.from_pretrained("./models/yarn-mistral-7b-128k.Q4_K_M.gguf", model_type="mistral",
+    llm = AutoModelForCausalLM.from_pretrained("./models/model.gguf", model_type="mistral",
                                                top_k = llm_settings['top_k'],
                                                top_p = llm_settings['top_p'],
                                                temperature = llm_settings['temperature'],
@@ -47,8 +47,8 @@ def reloadModel():
                                                last_n_tokens = llm_settings['last_n_tokens'],
                                                seed = llm_settings['seed'],
                                                max_new_tokens = llm_settings['max_new_tokens'],
-                                               context_length = llm_settings['context_length'],
-                                               gpu_layers = llm_settings['gpu_layers'],
+                                               context_length = 50000,
+                                               gpu_layers = 10000,
                                                 local_files_only=True)
 
     
