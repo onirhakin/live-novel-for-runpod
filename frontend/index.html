@@ -222,7 +222,7 @@
             // reenable the controls
             enableControls();
             // update context size
-            updateContextSize(jsonObject);
+            displayContextSize(jsonObject);
         }
     }
 
@@ -322,11 +322,19 @@
             // reenable the controls
             enableControls();
             // update context size
-            updateContextSize(jsonObject);
+            displayContextSize(jsonObject);
         }
     }
 
-    function updateContextSize(jsonObject){
+    function displayContextSize(jsonObject){
+        const story_length = jsonObject.story_length;
+        const context_length = jsonObject.context_length;
+        const contextStatsSpan = document.getElementById('context-ratio');
+        contextStatsSpan.innerText = story_length + "/" + context_length
+    }
+
+    //DEPRECATED FOR RUNPOD USE
+    /*function updateContextSize(jsonObject){
         // update context size
         const story_length = jsonObject.story_length;
         const context_length = jsonObject.context_length;
@@ -349,6 +357,7 @@
         contextStatsSpan.innerText = story_length + "/" + context_length
     }
 
+    //DEPRECATED FOR RUNPOD USE
     function changeContextSize(newContextSize, currentContextSize, step){
         // make sure context doesn't become 0
         if(newContextSize == 0)
@@ -376,6 +385,7 @@
         xhr.send(JSON.stringify({"new_context_size": newContextSize}));
     }
 
+    //DEPRECATED FOR RUNPOD USE
     function changeContextSizeCallback(){
         // Check response is ready or not
         //201 201 is usually sent when data was sent and the backend created a new resource or piece of data on the backend side in the database for example
@@ -397,7 +407,7 @@
             enableControls();
         }
     }
-
+    */
 
     // function to send the text added by the user
     /*function submitUserText() {
@@ -437,7 +447,8 @@
     function streamSubmitUserText(){
         // gets the last span in the story div
         const parentDiv = document.getElementById('story-div'); 
-        const spans = parentDiv.getElementsByTagName('span');
+        // in case i paste some text in a span and then the browser automatically adds divs and spans, i limit the search just to first level children
+        const spans = Array.from(parentDiv.children).filter(child => child.tagName.toLowerCase() === 'span');
         const lastSpan = spans[spans.length - 1];
         if(!lastSpan.contentEditable){
             console.log("Error the last span is not editable, something is wrong.");
@@ -483,7 +494,7 @@
         // Send the request over the network
         xhr.send(JSON.stringify({"data": dataToSend}));
         // Create a new EventSource for the streaming URL
-        const eventSource = new EventSource('http://localhost:6969/streamSubmitUserText');
+        const eventSource = new EventSource(apiUrl + 'streamSubmitUserText');
 
         // Handle the 'message' event to update the span content
         // eventSource.onmessage = function(event) {
@@ -565,7 +576,7 @@
             // reenable the controls
             enableControls();
             // update context size
-            updateContextSize(jsonObject);
+            displayContextSize(jsonObject);
             
         }
     }

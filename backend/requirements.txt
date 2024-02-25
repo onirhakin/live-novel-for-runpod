@@ -1,6 +1,6 @@
 transformers
 ctransformers
 ctransformers[cuda]
-tensorflow
+tensorflow[and-cuda]
 flask
 flask-cors
