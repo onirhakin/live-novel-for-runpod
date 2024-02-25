@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# exprot parth to tensorRT si it can be used (do wonder if adding it multiple times creates an issue)
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib/python3.10/dist-packages/tensorrt
+
 LIVE_NOVEL_ROOT=$(pwd)
 
 

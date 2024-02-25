@@ -47,7 +47,7 @@ def reloadModel():
                                                last_n_tokens = llm_settings['last_n_tokens'],
                                                seed = llm_settings['seed'],
                                                max_new_tokens = llm_settings['max_new_tokens'],
-                                               context_length = 50000,
+                                               context_length = 1000,
                                                gpu_layers = 10000,
                                                 local_files_only=True)
 
