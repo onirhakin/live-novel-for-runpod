@@ -1,5 +1,6 @@
 # AI part +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 import os
+lns_version = 2 # version that this program uses to save stories in
 tokenizer_repo = os.environ.get('TOKENIZER_REPO', "NousResearch/Yarn-Mistral-7b-64k")
 context_length = int(os.environ.get('CONTEXT_LENGTH', "64000"))
 last_n_tokens_size = int(os.environ.get('LAST_N_TOKENS_SIZE', "64"))
@@ -11,18 +12,6 @@ title= ''
 story=[]
 summary=[]
 backupFilePath = "backup.lns"
-llm_settings = {
-    "top_k": 40,
-    "top_p": 0.95,
-    "temperature": 0.8,
-    "repetition_penalty": 1.1,
-    "last_n_tokens": 64,
-    "seed": -1,
-    "max_new_tokens": 100, # this is not the default value but the value i decided
-    "context_length": 1000, # this is the start one, as the text expands will be increased (must reload the llm to make a change effective)
-    "gpu_layers": 30, # layers to put in gpu, this is for my pc (probably must reload the llm to make a change effective)
-    "context_length_step": 1000 # no llm setting but i use it to determine the step at which i increase the context length: 1000 more tokens every time it is increased (must reload the model) 
-}
 model_settings = {
     "last_n_tokens_size": last_n_tokens_size,
     "n_ctx": context_length, # context length
@@ -57,51 +46,26 @@ def reloadModel():
         del llm
         print("Deleted previous LLM")
     print("Loading LLM")
-    global llm_settings
+    global inference_settings
     llm = Llama(model_path="./models/model.gguf",
                 n_gpu_layers = model_settings["n_gpu_layers"],
                 n_ctx = model_settings["n_ctx"],
                 last_n_tokens_size = model_settings["last_n_tokens_size"])
-    # llm = AutoModelForCausalLM.from_pretrained("./models/model.gguf", model_type="mistral",
-    #                                            top_k = llm_settings['top_k'],
-    #                                            top_p = llm_settings['top_p'],
-    #                                            temperature = llm_settings['temperature'],
-    #                                            repetition_penalty = llm_settings['repetition_penalty'],
-    #                                            last_n_tokens = llm_settings['last_n_tokens'],
-    #                                            seed = llm_settings['seed'],
-    #                                            max_new_tokens = llm_settings['max_new_tokens'],
-    #                                            context_length = 1000,
-    #                                            gpu_layers = 10000,
-    #                                             local_files_only=True)
 
     
 reloadModel()
 
-# store new context length to settigns and reload the model
-# def changeContextLength(contextLength):
-#     global llm_settings
-#     llm_settings['context_length'] = contextLength
-#     reloadModel()
-
 def updateSettings(receivedSettings):
-    global llm_settings
-    reload_model = True
-    if(receivedSettings["gpu_layers"] != llm_settings["gpu_layers"]):
-        reload_model = True
-    c = llm_settings['context_length']
-    llm_settings = receivedSettings
-    llm_settings['context_length'] = c
-
-    if(reload_model):
-        #reload model
-        reloadModel()
+    global inference_settings
+    inference_settings = receivedSettings
 
 # save stry backup
 def saveBackup():
     data = {
+        "version": 2,
         "title": title,
         "story": story,
-        "llm_settings": llm_settings
+        "inference_settings": inference_settings
     }
     with open(backupFilePath, 'w') as file:
         json.dump(data, file, indent=4)
@@ -116,12 +80,29 @@ def loadBackup():
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
+    parseDataSwitch(loaded_data)
+    
+def parseDataSwitch(loaded_data):
+    if(loaded_data.get('version', 0)==2):
+        parseBackupVersion2(loaded_data)
+    else:
+        parseBackupVersionDefault(loaded_data)
+    
+def parseBackupVersionDefault(loaded_data):
+    # doesn't set  ssettings
     global title
     global story
-    global llm_settings
     title = loaded_data['title']
     story = loaded_data['story']
-    llm_settings = loaded_data['llm_settings']
+
+
+def parseBackupVersion2(loaded_data):
+    global title
+    global story
+    global inference_settings
+    title = loaded_data['title']
+    story = loaded_data['story']
+    inference_settings = loaded_data['inference_settings']
 
 # loads the backup of the  story at start
 loadBackup()
@@ -377,9 +358,7 @@ def getTokensStats():
     returnData = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.n_ctx(),
-            "context_length_step": llm_settings['context_length_step'],
-            "max_new_tokens": llm_settings['max_new_tokens']
+            "context_length": llm.n_ctx()
         }
     return flask.jsonify(returnData)
 
@@ -394,9 +373,7 @@ def changeContextSize():
         return_data = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.n_ctx(),
-            "context_length_step": llm_settings['context_length_step'],
-            "max_new_tokens": llm_settings['max_new_tokens']
+            "context_length": llm.n_ctx()
         }
         return flask.Response(response=json.dumps(return_data), status=201)
     
@@ -411,9 +388,7 @@ def submitEdit():
         return_data = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.n_ctx(),
-            "context_length_step": llm_settings['context_length_step'],
-            "max_new_tokens": llm_settings['max_new_tokens']
+            "context_length": llm.n_ctx()
         }
         return flask.Response(response=json.dumps(return_data), status=201)
     
@@ -423,11 +398,9 @@ def getFullStory():
     returnData = {
             "status": "success",
             "story": story,
-            "llm_settings": llm_settings,
+            "inference_settings": inference_settings,
             "story_length": getStoryTokenLength(),
-            "context_length": llm.n_ctx(),
-            "context_length_step": llm_settings['context_length_step'],
-            "max_new_tokens": llm_settings['max_new_tokens']
+            "context_length": llm.n_ctx()
         }
     return flask.jsonify(returnData)
 
@@ -436,9 +409,10 @@ def getStoryFile():
     print("getStoryFile endpoint reached...")
     # todo add summary entry probably when you add summarization
     returnData = {
+            "version": lns_version,
             "title": title,
             "story": story,
-            "llm_settings": llm_settings
+            "inference_settings": inference_settings
         }
     return flask.jsonify(returnData)
 
@@ -447,12 +421,13 @@ def setStoryFile():
     print("setStoryFile endpoint reached...")
     received_data = request.get_json()
     print(f"received data: {received_data}")
+    parseDataSwitch(received_data)
     #message = received_data['data']
-    global title
-    global story
-    title =  received_data['title']
-    story = received_data['story']
-    updateSettings(received_data['llm_settings'])
+    # global title
+    # global story
+    # title =  received_data['title']
+    # story = received_data['story']
+    # updateSettings(received_data['inference_settings'])
     return_data = {
         "status": "success"
     }
@@ -476,7 +451,7 @@ def setSettings():
     print("setSettings endpoint reached...")
     received_data = request.get_json()
     print(f"received data: {received_data}")
-    updateSettings(received_data['llm_settings'])
+    updateSettings(received_data['inference_settings'])
     
     return_data = {
         "status": "success"

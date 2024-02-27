@@ -32,23 +32,14 @@
                 <input type="text" id="repetition_penalty" class="settings-text-field" value="1.1">
                 <label for="repetition_penalty">repetition_penalty</label>
                 <br>
-                <input type="text" id="last_n_tokens" class="settings-text-field" value="64">
-                <label for="last_n_tokens">last_n_tokens</label>
-                <br>
                 <input type="text" id="seed" class="settings-text-field" value="-1">
                 <label for="seed">seed</label>
                 <br>
                 <input type="text" id="max_new_tokens" class="settings-text-field" value="100">
-                <label for="max_new_tokens">max_new_tokens_k</label>
-                <br>
-                <input type="text" id="gpu_layers" class="settings-text-field" value="30">
-                <label for="gpu_layers">gpu_layers</label>
-                <br>
-                <input type="text" id="context_length_step" class="settings-text-field" value="1000">
-                <label for="context_length_step">Context length step</label>
+                <label for="max_new_tokens">max_new_tokens</label>
                 <br>
                 <br>
-                <a href="https://github.com/marella/ctransformers?tab=readme-ov-file#documentation:~:text=not%20fully%20supported.-,Documentation,0,-Note%3A%20Currently">More about these values</a>
+                <a href="https://github.com/marella/ctransformers?tab=readme-ov-file#documentation:~:text=not%20fully%20supported.-,Documentation,0,-Note%3A%20Currently">More about these values</a> (Not using this library anymore, but are fairly similar.)
                 <br>
                 <div style="text-align: right">
                     <button id="apply-settings" onclick="applySettings()">
@@ -210,7 +201,7 @@
              // Parse the JSON string
              const jsonObject = JSON.parse(xhr.responseText);
 
-            distributeSettingsToUi(jsonObject.llm_settings);
+            distributeSettingsToUi(jsonObject.inference_settings);
 
             
             
@@ -761,12 +752,9 @@
             "top_k": parseInt(document.getElementById('top_k').value),
             "top_p": parseFloat(document.getElementById('top_p').value),
             "temperature": parseFloat(document.getElementById('temperature').value),
-            "repetition_penalty": parseFloat(document.getElementById('repetition_penalty').value),
-            "last_n_tokens": parseInt(document.getElementById('last_n_tokens').value),
+            "repeat_penalty": parseFloat(document.getElementById('repetition_penalty').value),
             "seed": parseInt(document.getElementById('seed').value),
-            "max_new_tokens": parseInt(document.getElementById('max_new_tokens').value),
-            "gpu_layers": parseInt(document.getElementById('gpu_layers').value),
-            "context_length_step": parseInt(document.getElementById('context_length_step').value)
+            "max_tokens": parseInt(document.getElementById('max_new_tokens').value)
         }
         console.log(settings);
         setSettings(settings);
@@ -782,7 +770,7 @@
         xhr.open("POST", apiUrl + "setSettings", true);
         xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         // Send the request over the network
-        xhr.send(JSON.stringify({"llm_settings": settings}));
+        xhr.send(JSON.stringify({"inference_settings": settings}));
     }
     // callback when the response is received
     function setSettingsCallback(){
@@ -797,12 +785,9 @@
         document.getElementById('top_k').value = settings['top_k'];
         document.getElementById('top_p').value = settings['top_p'];
         document.getElementById('temperature').value = settings['temperature'];
-        document.getElementById('repetition_penalty').value = settings['repetition_penalty'];
-        document.getElementById('last_n_tokens').value = settings['last_n_tokens'];
+        document.getElementById('repetition_penalty').value = settings['repeat_penalty'];
         document.getElementById('seed').value = settings['seed'];
-        document.getElementById('max_new_tokens').value = settings['max_new_tokens'];
-        document.getElementById('gpu_layers').value = settings['gpu_layers'];
-        document.getElementById('context_length_step').value = settings['context_length_step'];
+        document.getElementById('max_new_tokens').value = settings['max_tokens'];
     }
 
 
