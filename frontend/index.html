@@ -457,6 +457,9 @@
         //make span uneditable
         lastSpan.contentEditable = false;
         dataToSend = removeLastReturn(lastSpan.innerText);
+        // remove if empty as in the backend we dont append to story if empty, and would get a index mismatch
+        if (lastSpan.innerText == "")
+            lastSpan.remove();
         console.log("Sending data: " + dataToSend);
         // disable controlls
         disableControls();
