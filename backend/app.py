@@ -1,5 +1,12 @@
 # AI part +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+import os
+tokenizer_repo = os.environ.get('TOKENIZER_REPO', "NousResearch/Yarn-Mistral-7b-64k")
+context_length = int(os.environ.get('CONTEXT_LENGTH', "64000"))
+last_n_tokens_size = int(os.environ.get('LAST_N_TOKENS_SIZE', "64"))
+n_gpu_layers = int(os.environ.get('N_GPU_LAYERS', "-1"))
+
 import json
+from llama_cpp import Llama
 title= ''
 story=[]
 summary=[]
@@ -16,9 +23,22 @@ llm_settings = {
     "gpu_layers": 30, # layers to put in gpu, this is for my pc (probably must reload the llm to make a change effective)
     "context_length_step": 1000 # no llm setting but i use it to determine the step at which i increase the context length: 1000 more tokens every time it is increased (must reload the model) 
 }
+model_settings = {
+    "last_n_tokens_size": last_n_tokens_size,
+    "n_ctx": context_length, # context length
+    "n_gpu_layers": n_gpu_layers, # gpu layers (-1 all)
+}
+inference_settings = {
+    "top_k": 40,
+    "top_p": 0.95,
+    "temperature": 0.8,
+    "repeat_penalty": 1.1,
+    "seed": -1,
+    "max_tokens": 50, # this is not the default value but the value i decided
+}
 
 # load the LLM (saved in ./models)
-from ctransformers import AutoModelForCausalLM
+
 # Set gpu_layers to the number of layers to offload to GPU. Set to 0 if no GPU acceleration is available on your system.
 # print("Loading LLM")
 #llm = AutoModelForCausalLM.from_pretrained("./models/yarn-mistral-7b-128k.Q4_K_M.gguf", model_type="mistral", gpu_layers=30, context_length=1000, local_files_only=True)
@@ -38,27 +58,30 @@ def reloadModel():
         print("Deleted previous LLM")
     print("Loading LLM")
     global llm_settings
-    
-    llm = AutoModelForCausalLM.from_pretrained("./models/model.gguf", model_type="mistral",
-                                               top_k = llm_settings['top_k'],
-                                               top_p = llm_settings['top_p'],
-                                               temperature = llm_settings['temperature'],
-                                               repetition_penalty = llm_settings['repetition_penalty'],
-                                               last_n_tokens = llm_settings['last_n_tokens'],
-                                               seed = llm_settings['seed'],
-                                               max_new_tokens = llm_settings['max_new_tokens'],
-                                               context_length = 1000,
-                                               gpu_layers = 10000,
-                                                local_files_only=True)
+    llm = Llama(model_path="./models/model.gguf",
+                n_gpu_layers = model_settings["n_gpu_layers"],
+                n_ctx = model_settings["n_ctx"],
+                last_n_tokens_size = model_settings["last_n_tokens_size"])
+    # llm = AutoModelForCausalLM.from_pretrained("./models/model.gguf", model_type="mistral",
+    #                                            top_k = llm_settings['top_k'],
+    #                                            top_p = llm_settings['top_p'],
+    #                                            temperature = llm_settings['temperature'],
+    #                                            repetition_penalty = llm_settings['repetition_penalty'],
+    #                                            last_n_tokens = llm_settings['last_n_tokens'],
+    #                                            seed = llm_settings['seed'],
+    #                                            max_new_tokens = llm_settings['max_new_tokens'],
+    #                                            context_length = 1000,
+    #                                            gpu_layers = 10000,
+    #                                             local_files_only=True)
 
     
 reloadModel()
 
 # store new context length to settigns and reload the model
-def changeContextLength(contextLength):
-    global llm_settings
-    llm_settings['context_length'] = contextLength
-    reloadModel()
+# def changeContextLength(contextLength):
+#     global llm_settings
+#     llm_settings['context_length'] = contextLength
+#     reloadModel()
 
 def updateSettings(receivedSettings):
     global llm_settings
@@ -105,9 +128,9 @@ loadBackup()
 
 # Load the tokenizer so to be able to compute the number of tokens
 from transformers import AutoTokenizer
-tokenizer = AutoTokenizer.from_pretrained("NousResearch/Yarn-Mistral-7b-128k")
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_repo)
 def numberOfTokens(text):
-    input_ids = tokenizer.encode(text, return_tensors='tf')
+    input_ids = tokenizer.encode(text, return_tensors='pt')
     return input_ids.shape[1]
 
 textStream = ""
@@ -116,7 +139,19 @@ def streamInference(input, stopAtEndOfSentence=False):
     print("\inference STARTED\n")
     print("###############################################################\n")
     global textStream
-    for text in llm(input, stream=True):
+    for item in llm(
+        input,
+        max_tokens = inference_settings["max_tokens"],
+        top_k = inference_settings["top_k"],
+        top_p = inference_settings["top_p"],
+        repeat_penalty = inference_settings["repeat_penalty"],
+        temperature = inference_settings["temperature"],
+        echo = True,
+        seed = inference_settings["seed"],
+    #    stop = stop,
+        stream = True
+    ):
+        text = item['choices'][0]['text']
         yield text
         textStream+=text
         print(text, end="", flush=True)
@@ -124,17 +159,22 @@ def streamInference(input, stopAtEndOfSentence=False):
             if text in ['.', '!', '?']:
                 print("End of sentence! Will it stop?")
                 return 
+    # for text in llm(input, stream=True):
+    #     yield text
+    #     textStream+=text
+    #     print(text, end="", flush=True)
+    #     if(stopAtEndOfSentence):
+    #         if text in ['.', '!', '?']:
+    #             print("End of sentence! Will it stop?")
+    #             return 
             
 # function to continue text
 def streamContinueText(input):
     global textStream
     textStream=""
-    # llm.config.context_length=10000 #not really working i should reaload the model
-    # llm.config.temperature=1
     print("before streamInference---------------------------------------------------------------------------------------------------------")
     for text in streamInference(input):
         yield text
-    # print("out :"+textStream)
     print("before stream finish sentence ---------------------------------------------------------------------------------------------------------")
     for text in streamFinishSentence(input, textStream):
         yield text
@@ -337,7 +377,7 @@ def getTokensStats():
     returnData = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.config.context_length,
+            "context_length": llm.n_ctx(),
             "context_length_step": llm_settings['context_length_step'],
             "max_new_tokens": llm_settings['max_new_tokens']
         }
@@ -354,7 +394,7 @@ def changeContextSize():
         return_data = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.config.context_length,
+            "context_length": llm.n_ctx(),
             "context_length_step": llm_settings['context_length_step'],
             "max_new_tokens": llm_settings['max_new_tokens']
         }
@@ -371,7 +411,7 @@ def submitEdit():
         return_data = {
             "status": "success",
             "story_length": getStoryTokenLength(),
-            "context_length": llm.config.context_length,
+            "context_length": llm.n_ctx(),
             "context_length_step": llm_settings['context_length_step'],
             "max_new_tokens": llm_settings['max_new_tokens']
         }
@@ -385,7 +425,7 @@ def getFullStory():
             "story": story,
             "llm_settings": llm_settings,
             "story_length": getStoryTokenLength(),
-            "context_length": llm.config.context_length,
+            "context_length": llm.n_ctx(),
             "context_length_step": llm_settings['context_length_step'],
             "max_new_tokens": llm_settings['max_new_tokens']
         }

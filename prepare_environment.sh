@@ -4,8 +4,7 @@ LIVE_NOVEL_ROOT=$(pwd)
 
 #cd "$LIVE_NOVEL_ROOT/backend"
 # removes blinker, as seems that pip is not able to remove it, and that would prevent the installation of flask
-
-#apt-get -y remove python3-blinker
+apt-get -y remove python3-blinker
 # install requirements
 #pip install -r requirements.txt
 
@@ -15,6 +14,9 @@ LIVE_NOVEL_ROOT=$(pwd)
 #python -m pip install -r torch_requirements.txt
 # install stuff that must be installed later other wise overwritten (maybe)
 #python -m pip install -r requirements2.txt
+
+# inatall transformers for tokenizer to measure token length
+pip install transformers
 
 # download,compile and install llama-cpp-python with GPU enabled (cuda 11.8)
 CUDACXX="/usr/local/cuda-11.8/bin/nvcc" CMAKE_ARGS="-DLLAMA_CUBLAS=on -DCMAKE_CUDA_ARCHITECTURES=all-major" FORCE_CMAKE=1 pip install llama-cpp-python --no-cache-dir --force-reinstall --upgrade
