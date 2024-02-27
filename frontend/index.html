@@ -812,7 +812,7 @@
       var storyDiv = document.getElementById('story-div');
       var newTextIcon = document.getElementById('new-text-icon');
       
-      if (storyDiv.scrollHeight - storyDiv.scrollTop > storyDiv.clientHeight) {
+      if (storyDiv.scrollHeight - Math.ceil(storyDiv.scrollTop) > storyDiv.clientHeight) {
         newTextIcon.style.display = 'block'; // Show the icon if not scrolled to the bottom
       } else {
         newTextIcon.style.display = 'none'; // Hide the icon if scrolled to the bottom
