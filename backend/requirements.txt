@@ -1,6 +1,0 @@
-tensorflow[and-cuda]==2.14.0
-transformers
-ctransformers
-ctransformers[cuda]
-flask
-flask-cors
