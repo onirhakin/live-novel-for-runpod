@@ -1,5 +1,5 @@
 # AI part +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-import os
+import os, time
 lns_version = 2 # version that this program uses to save stories in
 tokenizer_repo = os.environ.get('TOKENIZER_REPO', "NousResearch/Yarn-Mistral-7b-64k")
 context_length = int(os.environ.get('CONTEXT_LENGTH', "64000"))
@@ -139,6 +139,7 @@ def streamInference(input, stopAtEndOfSentence=False):
         if(stopAtEndOfSentence):
             if text in ['.', '!', '?']:
                 print("End of sentence! Will it stop?")
+                time.sleep(0.5) # to make sure to deliver the last word to UI
                 return 
     # for text in llm(input, stream=True):
     #     yield text
