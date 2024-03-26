@@ -73,7 +73,7 @@ Once the pod has beed deployed must go to Connect and connect to the Jupiter lab
 There, start a terminal and copy paste the following lines, then enter.
 
 ```bash
-git clone https://github.com/onirhakin/live-novel-for-runpod.git live-novel
+git clone -b mistral-7b https://github.com/onirhakin/live-novel-for-runpod.git live-novel
 cd live-novel
 chmod +x prepare_environment.sh
 chmod +x start_servers.sh
