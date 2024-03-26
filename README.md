@@ -1,4 +1,4 @@
-# Live Novel (Mistral-7-64k)
+# Live Novel (Mixtral) [work in progress!!!!]
 <span style="color:red; font-weight: bold">
     This is a stupid code, I made it for me, and is not really supposed to be used by other people, but I write this because in few weeks I will forget how to use it XD
 </span>
@@ -73,7 +73,7 @@ Once the pod has beed deployed must go to Connect and connect to the Jupiter lab
 There, start a terminal and copy paste the following lines, then enter.
 
 ```bash
-git clone https://github.com/onirhakin/live-novel-for-runpod.git live-novel
+git clone -b mixtral https://github.com/onirhakin/live-novel-for-runpod.git live-novel
 cd live-novel
 chmod +x prepare_environment.sh
 chmod +x start_servers.sh
