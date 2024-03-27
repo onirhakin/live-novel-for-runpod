@@ -67,8 +67,7 @@ And the following enviromental variable must be added
 
 ## Every Launch Installation
 
-To run the application the template must be deployed in a new pod. For this model I use a RTX 6000 Ada from the Community Cloud, should work also on 2 RTX 4000 ada. Currently $0.21/hr.
-'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' check GPU
+To run the application the template must be deployed in a new pod. For this model I use a RTX 6000 Ada from the Community Cloud, should work on any gpu with more than 40GB of VRAM.
 
 Once the pod has beed deployed must go to Connect and connect to the Jupiter lab Port that should be purple.
 ![alt text](<readme images/connect to jupyter lab.png>)
