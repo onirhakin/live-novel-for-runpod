@@ -8,7 +8,9 @@ Live Novel uses an LLM to make a novel-like adventure. Some initial text is prov
 ![alt text](<readme images/live novel nominal.png>)
 
 This repo contains files to quickly install and run Live Novel on a Runpod pod.
-This has been tested with Mistral-7b-64k, but theoretically any text generative model could be used.
+This has been tested with Mistral-7b-64k-GGUF and Mixtral-8x7B-v0.1-GGUF, but theoretically any text generative model (with GGUF format) could be used.
+
+This branch is identical to the original mistral-7b one, but it has settings tailored for mixtral in the readme and can download the model in parallel to the installation to speed up the startup.
 
 It is faster to clone and run installation scripts every time a new pod is created, rather than creating an image with live novel already installed.
 
@@ -45,7 +47,7 @@ To launch a pod setup with all the needed for live novel,  a Runpod template lik
 | Container Registry Credentials| | None |
 | Container Start Command|| None|
 | Container Disk | 20 GB ||
-| Volume Disk| 20 GB||
+| Volume Disk| 50 GB| Must be enough to download the model. |
 | Volume Mounth Path| /workspace ||
 | Expose HTTP Ports | 8888,8000,6969| 8888 is used for JupyterLab used to access a shell, 8000 is used for the user to access the app via browser, 6969 is used by the frontend to access the backend |
 | Expose TCP Ports| 22, | |
@@ -53,9 +55,9 @@ To launch a pod setup with all the needed for live novel,  a Runpod template lik
 And the following enviromental variable must be added
 | Key | Value | Notes |
 | -------- | -------- | -------- |
-| MODEL_DOWNLOAD_URL | https://huggingface.co/TheBloke/Yarn-Mistral-7B-64k-GGUF/resolve/main/yarn-mistral-7b-64k.Q5_K_M.gguf?download=true | URL to download the desired model, in my case Mistral7b 64k context qantized Q5_K_M | 
-| TOKENIZER_REPO | NousResearch/Yarn-Mistral-7b-64k | Adress od hugging face repo of the model, where can be found the tokenizer of the downloaded model. |
-| CONTEXT_LENGTH | 64000 | Maximum text length the model can tolerate (in tokens) |
+| MODEL_DOWNLOAD_URL | https://huggingface.co/TheBloke/Mixtral-8x7B-v0.1-GGUF/resolve/main/mixtral-8x7b-v0.1.Q5_K_M.gguf?download=true | URL to download the desired model, in my case Mixtral qantized Q5_K_M | 
+| TOKENIZER_REPO | mistralai/Mixtral-8x7B-v0.1 | Adress od hugging face repo of the model, where can be found the tokenizer of the downloaded model. |
+| CONTEXT_LENGTH | 32000 | Maximum text length the model can tolerate (in tokens) |
 | LAST_N_TOKENS_SIZE | 64 | Maximum number of tokens to keep in the last_n_tokens deque. |
 | N_GPU_LAYERS | -1 | Number of layer to load in the GPU (-1 is all of them), if they cannot all fit in the GPU it might crash. But this settings works fine for the described model and setup. |
 
@@ -65,7 +67,8 @@ And the following enviromental variable must be added
 
 ## Every Launch Installation
 
-To run the application the template must be deployed in a new pod. For this model I use a RTX 4000 Ada from the Community Cloud. Currently $0.21/hr.
+To run the application the template must be deployed in a new pod. For this model I use a RTX 6000 Ada from the Community Cloud, should work also on 2 RTX 4000 ada. Currently $0.21/hr.
+'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''' check GPU
 
 Once the pod has beed deployed must go to Connect and connect to the Jupiter lab Port that should be purple.
 ![alt text](<readme images/connect to jupyter lab.png>)

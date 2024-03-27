@@ -2,6 +2,9 @@
 
 LIVE_NOVEL_ROOT=$(pwd)
 
+# dowloads the llm model to execute in subshell
+( cd "$LIVE_NOVEL_ROOT/backend/models" && wget -O "model.gguf" [file $MODEL_DOWNLOAD_URL] & )
+
 # removes blinker, as seems that pip is not able to remove it, and that would prevent the installation of flask
 apt-get -y remove python3-blinker
 
@@ -15,6 +18,9 @@ CUDACXX="/usr/local/cuda-11.8/bin/nvcc" CMAKE_ARGS="-DLLAMA_CUBLAS=on -DCMAKE_CU
 pip install flask
 pip install flask-cors
 
-cd "$LIVE_NOVEL_ROOT/backend/models"
-# dowloads the llm model to execute
-wget -O "model.gguf" [file $MODEL_DOWNLOAD_URL]
+# wait for the subshell download to finish
+wait
+
+echo 'Programs installed and model downloaded.  Environment is ready!'
+
+
