@@ -3,7 +3,7 @@
 LIVE_NOVEL_ROOT=$(pwd)
 
 # dowloads the llm model to execute in subshell
-( cd "$LIVE_NOVEL_ROOT/backend/models" && wget -O "model.gguf" [file $MODEL_DOWNLOAD_URL] & )
+( cd "$LIVE_NOVEL_ROOT/backend/models" && wget -O "model.gguf" [file $MODEL_DOWNLOAD_URL] ) &
 
 # removes blinker, as seems that pip is not able to remove it, and that would prevent the installation of flask
 apt-get -y remove python3-blinker
